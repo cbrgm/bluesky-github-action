@@ -1,4 +1,4 @@
-# bluesky Send GitHub Action
+# Bluesky Send GitHub Action
 
 <img
   src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Bluesky_Logo.svg"
