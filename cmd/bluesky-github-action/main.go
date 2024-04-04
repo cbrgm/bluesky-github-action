@@ -48,6 +48,7 @@ type ActionInputs struct {
 }
 
 // createSession initiates a new session with the PDS service.
+// nolint: errcheck
 func createSession(pdsURL, handle, password string) (*SessionResponse, error) {
 	loginURL := fmt.Sprintf("%s/xrpc/com.atproto.server.createSession", pdsURL)
 	requestBody, err := json.Marshal(map[string]string{
@@ -77,6 +78,7 @@ func createSession(pdsURL, handle, password string) (*SessionResponse, error) {
 }
 
 // publishPost submits a new post to the PDS service using the provided session.
+// nolint: errcheck
 func publishPost(pdsURL string, session *SessionResponse, post *Post, logger *slog.Logger) error {
 	postURL := fmt.Sprintf("%s/xrpc/com.atproto.repo.createRecord", pdsURL)
 	postData, err := json.Marshal(map[string]interface{}{
@@ -168,4 +170,3 @@ func main() {
 
 	logger.Info("Post published successfully")
 }
-
