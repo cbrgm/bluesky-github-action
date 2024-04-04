@@ -5,7 +5,8 @@ author: 'cbrgm'
 inputs:
   pds-url:
     description: 'Bluesky PDS URL'
-    required: true
+    default: "https://bsky.social"
+    required: false
   handle:
     description: 'User handle for authentication with Bluesky'
     required: true
