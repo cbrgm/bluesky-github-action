@@ -1,0 +1,17 @@
+name: Send Bluesky Post
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send post to Bluesky
+      id: bluesky_post
+      uses: cbrgm/bluesky-github-action@v1
+      with:
+        handle: ${{ secrets.BLUESKY_HANDLE }}
+        password: ${{ secrets.BLUESKY_PASSWORD }}
+        text: "Hello from GitHub Actions!"
+

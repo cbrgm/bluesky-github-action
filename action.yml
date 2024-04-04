@@ -1,0 +1,50 @@
+name: 'bluesky-send-post'
+description: 'Send posts to Bluesky from GitHub Actions'
+author: 'cbrgm'
+
+inputs:
+  pds-url:
+    description: 'Bluesky PDS URL'
+    required: true
+  handle:
+    description: 'User handle for authentication with Bluesky'
+    required: true
+  password:
+    description: 'Password for authentication with Bluesky'
+    required: true
+  text:
+    description: 'The content of the post'
+    required: true
+  lang:
+    description: 'Comma-separated list of ISO 639 language codes for the post'
+    required: false
+  log-level:
+    description: 'Logging level (debug, info, warn, error)'
+    required: false
+    default: 'info'
+
+outputs:
+  success:
+    description: 'Boolean indicating if the post was successfully sent'
+
+runs:
+  using: 'docker'
+  image: 'docker://ghcr.io/cbrgm/bluesky-github-action:v1'
+  args:
+    - --pds-url
+    - ${{ inputs.pds-url }}
+    - --handle
+    - ${{ inputs.handle }}
+    - --password
+    - ${{ inputs.password }}
+    - --text
+    - ${{ inputs.text }}
+    - --lang
+    - ${{ inputs.lang }}
+    - --log-level
+    - ${{ inputs.log-level }}
+
+branding:
+  icon: send
+  color: blue
+
