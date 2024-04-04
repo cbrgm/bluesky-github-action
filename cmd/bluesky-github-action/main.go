@@ -43,7 +43,7 @@ type ActionInputs struct {
 	Handle   string   `arg:"--handle,required" env:"ATP_AUTH_HANDLE"`                    // User handle for authentication.
 	Password string   `arg:"--password,required" env:"ATP_AUTH_PASSWORD"`                // Password for authentication.
 	Text     string   `arg:"--text,required" env:"BSKY_MESSAGE"`                         // Text content for the new post.
-	Lang     []string `arg:"--lang" env:"BSKY_LANG" default:"en"`                        // Languages for the new post.
+	Lang     []string `arg:"--lang" env:"BSKY_LANG"`                                     // Languages for the new post.
 	LogLevel string   `arg:"--log-level" env:"LOG_LEVEL" default:"info"`                 // Logging level.
 }
 
