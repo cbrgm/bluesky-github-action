@@ -18,6 +18,7 @@ inputs:
     required: true
   lang:
     description: 'Comma-separated list of ISO 639 language codes for the post'
+    default: "en"
     required: false
   log-level:
     description: 'Logging level (debug, info, warn, error)'
