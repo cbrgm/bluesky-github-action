@@ -49,8 +49,7 @@ runs:
     - ${{ inputs.lang }}
     - --log-level
     - ${{ inputs.log-level }}
-    - --enable-embeds
-    - ${{ inputs.enable-embeds }}
+    - --enable-embeds=${{ inputs.enable-embeds }}
 
 branding:
   icon: send
