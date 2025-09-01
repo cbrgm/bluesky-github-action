@@ -24,6 +24,10 @@ inputs:
     description: 'Logging level (debug, info, warn, error)'
     required: false
     default: 'info'
+  enable-embeds:
+    description: 'Enable rich link card embeds for URLs in posts'
+    required: false
+    default: 'true'
 
 outputs:
   success:
@@ -45,6 +49,8 @@ runs:
     - ${{ inputs.lang }}
     - --log-level
     - ${{ inputs.log-level }}
+    - --enable-embeds
+    - ${{ inputs.enable-embeds }}
 
 branding:
   icon: send

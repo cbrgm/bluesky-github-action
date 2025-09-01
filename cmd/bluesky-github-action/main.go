@@ -31,20 +31,23 @@ type SessionResponse struct {
 
 // Post represents a message to be published to the server.
 type Post struct {
-	Type      string   `json:"$type"`           // Type of the post.
-	Text      string   `json:"text"`            // Text content of the post.
-	CreatedAt string   `json:"createdAt"`       // ISO 8601 timestamp of post creation.
-	Langs     []string `json:"langs,omitempty"` // Optional languages the post supports.
+	Type      string          `json:"$type"`            // Type of the post.
+	Text      string          `json:"text"`             // Text content of the post.
+	CreatedAt string          `json:"createdAt"`        // ISO 8601 timestamp of post creation.
+	Langs     []string        `json:"langs,omitempty"`  // Optional languages the post supports.
+	Facets    []RichTextFacet `json:"facets,omitempty"` // Rich text facets for links, mentions, hashtags.
+	Embed     *EmbedExternal  `json:"embed,omitempty"`  // External link embed for link cards.
 }
 
 // ActionInputs aggregates command line arguments and environment variables for application configuration.
 type ActionInputs struct {
-	PDSURL   string   `arg:"--pds-url" env:"ATP_PDS_HOST" default:"https://bsky.social"` // Base URL of the PDS service.
-	Handle   string   `arg:"--handle,required" env:"ATP_AUTH_HANDLE"`                    // User handle for authentication.
-	Password string   `arg:"--password,required" env:"ATP_AUTH_PASSWORD"`                // Password for authentication.
-	Text     string   `arg:"--text,required" env:"BSKY_MESSAGE"`                         // Text content for the new post.
-	Lang     []string `arg:"--lang" env:"BSKY_LANG"`                                     // Languages for the new post.
-	LogLevel string   `arg:"--log-level" env:"LOG_LEVEL" default:"info"`                 // Logging level.
+	PDSURL       string   `arg:"--pds-url" env:"ATP_PDS_HOST" default:"https://bsky.social"` // Base URL of the PDS service.
+	Handle       string   `arg:"--handle,required" env:"ATP_AUTH_HANDLE"`                    // User handle for authentication.
+	Password     string   `arg:"--password,required" env:"ATP_AUTH_PASSWORD"`                // Password for authentication.
+	Text         string   `arg:"--text,required" env:"BSKY_MESSAGE"`                         // Text content for the new post.
+	Lang         []string `arg:"--lang" env:"BSKY_LANG"`                                     // Languages for the new post.
+	LogLevel     string   `arg:"--log-level" env:"LOG_LEVEL" default:"info"`                 // Logging level.
+	EnableEmbeds bool     `arg:"--enable-embeds" env:"BSKY_ENABLE_EMBEDS" default:"true"`    // Enable link card embeds.
 }
 
 // createSession initiates a new session with the PDS service.
@@ -156,11 +159,24 @@ func main() {
 
 	logger.Debug("Session created successfully", "userID", session.UserID)
 
+	// Parse rich text facets from the text
+	facets := parseRichTextFacets(args.Text)
+
+	// Create embed for the first URL if embeds are enabled
+	var embed *EmbedExternal
+	if args.EnableEmbeds && len(facets) > 0 {
+		firstURL := facets[0].Features[0].URI
+		logger.Debug("Fetching embed metadata", "url", firstURL)
+		embed = fetchLinkMetadata(firstURL, logger)
+	}
+
 	post := &Post{
 		Type:      "app.bsky.feed.post",
 		Text:      args.Text,
 		CreatedAt: time.Now().Format(time.RFC3339),
 		Langs:     args.Lang,
+		Facets:    facets,
+		Embed:     embed,
 	}
 
 	if err := publishPost(args.PDSURL, session, post, logger); err != nil {
