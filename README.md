@@ -23,6 +23,7 @@
 - `pds-url`: Optional - The URL of the Bluesky PDS (Personal Data Server).
 - `lang`: Optional - A comma-separated list of ISO 639 language codes for the post. Helps in categorizing the post by language.
 - `log-level`: Optional - Specifies the logging level (`debug`, `info`, `warn`, `error`). Defaults to `info`.
+- `enable-embeds`: Optional - Enable rich link card embeds for URLs in posts. When enabled, URLs will display as interactive link cards with title and description. Defaults to `true`.
 
 ## Container Usage
 
@@ -69,6 +70,32 @@ Multiline post:
     text: |
       This is a multiline post sent from GitHub Actions.
       This example demonstrates how to include multiple lines in the `text` input.
+```
+
+Post with rich links:
+
+```yaml
+- name: Send post with rich link card to Bluesky
+  id: bluesky_post_link
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }} # Your handle (example: username.bsky.social)
+    password: ${{ secrets.BLUESKY_PASSWORD }} # Your password
+    text: "Check out this awesome GitHub repository: https://github.com/cbrgm/bluesky-github-action"
+    enable-embeds: true # Enable rich link cards (default: true)
+```
+
+Disable rich embeds (text-only URLs):
+
+```yaml
+- name: Send post without link cards to Bluesky
+  id: bluesky_post_plain
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }}
+    password: ${{ secrets.BLUESKY_PASSWORD }}
+    text: "Plain URL: https://github.com/cbrgm/bluesky-github-action"
+    enable-embeds: false # Disable link cards, URLs will still be clickable
 ```
 
 ## High-Level Functionality
