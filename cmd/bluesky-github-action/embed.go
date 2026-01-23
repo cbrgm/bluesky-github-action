@@ -40,10 +40,10 @@ type BlobRef struct {
 
 // Blob represents an uploaded blob (image or video).
 type Blob struct {
-	Type     string   `json:"$type"`
-	Ref      BlobRef  `json:"ref"`
-	MimeType string   `json:"mimeType"`
-	Size     int      `json:"size"`
+	Type     string  `json:"$type"`
+	Ref      BlobRef `json:"ref"`
+	MimeType string  `json:"mimeType"`
+	Size     int     `json:"size"`
 }
 
 // AspectRatio represents the aspect ratio of media content.

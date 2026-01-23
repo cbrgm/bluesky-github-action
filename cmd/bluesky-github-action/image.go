@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-// Constants for image upload constraints
+// Constants for image upload constraints.
 const (
 	maxImagesPerPost = 4
 	maxImageSize     = 1000000 // 1MB in bytes
@@ -99,7 +99,7 @@ func parseImagePaths(imagePaths string) []string {
 }
 
 // processImage processes a single image file: reads, validates, uploads, and creates an embed.
-func processImage(pdsURL, accessToken, path string, altText string, logger *slog.Logger) (*EmbedImage, error) {
+func processImage(pdsURL, accessToken, path, altText string, logger *slog.Logger) (*EmbedImage, error) {
 	logger.Debug("Processing image", "path", path, "alt", altText)
 
 	// Read image file
@@ -133,7 +133,7 @@ func processImage(pdsURL, accessToken, path string, altText string, logger *slog
 }
 
 // processImages reads image files, uploads them as blobs, and creates an EmbedImages structure.
-func processImages(pdsURL, accessToken string, imagePaths, altTexts string, logger *slog.Logger) (*EmbedImages, error) {
+func processImages(pdsURL, accessToken, imagePaths, altTexts string, logger *slog.Logger) (*EmbedImages, error) {
 	paths := parseImagePaths(imagePaths)
 	if len(paths) == 0 {
 		return nil, nil
