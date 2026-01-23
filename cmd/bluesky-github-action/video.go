@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// Constants for video upload constraints
+// Constants for video upload constraints.
 const (
 	videoServiceURL      = "https://video.bsky.app"
 	maxVideoSize         = 50 * 1024 * 1024 // 50MB in bytes (reasonable default)
