@@ -28,6 +28,18 @@ inputs:
     description: 'Enable rich link card embeds for URLs in posts'
     required: false
     default: 'true'
+  image-paths:
+    description: 'Comma-separated list of image file paths to attach to the post (max 4 images, max 1MB each)'
+    required: false
+  image-alt-texts:
+    description: 'Comma-separated list of alt text descriptions for images. If only one value is provided, it will be used for all images.'
+    required: false
+  video-path:
+    description: 'Video file path to attach to the post (MP4, MOV, WebM supported, max 50MB)'
+    required: false
+  video-alt-text:
+    description: 'Alt text description for the video'
+    required: false
 
 outputs:
   success:
@@ -50,6 +62,14 @@ runs:
     - --log-level
     - ${{ inputs.log-level }}
     - --enable-embeds=${{ inputs.enable-embeds }}
+    - --image-paths
+    - ${{ inputs.image-paths }}
+    - --image-alt-texts
+    - ${{ inputs.image-alt-texts }}
+    - --video-path
+    - ${{ inputs.video-path }}
+    - --video-alt-text
+    - ${{ inputs.video-alt-text }}
 
 branding:
   icon: send

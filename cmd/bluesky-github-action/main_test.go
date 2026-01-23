@@ -121,3 +121,88 @@ func TestPublishPost(t *testing.T) {
 		})
 	}
 }
+
+func TestUploadBlob(t *testing.T) {
+	tests := []struct {
+		name           string
+		imageData      []byte
+		mimeType       string
+		mockResponse   string
+		mockStatusCode int
+		wantErr        bool
+	}{
+		{
+			name:      "successful blob upload",
+			imageData: []byte("fake-image-data"),
+			mimeType:  "image/png",
+			mockResponse: `{
+				"blob": {
+					"$type": "blob",
+					"ref": {
+						"$link": "bafkreibabalobzn6cd366ukcsjycp4yymjymgfxcv6xczmlgpemzkz3cfa"
+					},
+					"mimeType": "image/png",
+					"size": 15
+				}
+			}`,
+			mockStatusCode: http.StatusOK,
+			wantErr:        false,
+		},
+		{
+			name:           "failed blob upload with unauthorized error",
+			imageData:      []byte("fake-image-data"),
+			mimeType:       "image/jpeg",
+			mockResponse:   `{"error": "Unauthorized"}`,
+			mockStatusCode: http.StatusUnauthorized,
+			wantErr:        true,
+		},
+		{
+			name:           "failed blob upload with server error",
+			imageData:      []byte("fake-image-data"),
+			mimeType:       "image/gif",
+			mockResponse:   `{"error": "Internal Server Error"}`,
+			mockStatusCode: http.StatusInternalServerError,
+			wantErr:        true,
+		},
+	}
+
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				// Verify request headers
+				if r.Header.Get("Content-Type") != tc.mimeType {
+					t.Errorf("Expected Content-Type %s, got %s", tc.mimeType, r.Header.Get("Content-Type"))
+				}
+				if r.Header.Get("Authorization") != "Bearer fake-token" {
+					t.Errorf("Expected Authorization header with Bearer token")
+				}
+
+				w.WriteHeader(tc.mockStatusCode)
+				fmt.Fprintln(w, tc.mockResponse)
+			}))
+			defer mockServer.Close()
+
+			blob, err := uploadBlob(mockServer.URL, "fake-token", tc.imageData, tc.mimeType, logger)
+
+			if (err != nil) != tc.wantErr {
+				t.Errorf("uploadBlob() error = %v, wantErr %v", err, tc.wantErr)
+			}
+
+			if !tc.wantErr && blob == nil {
+				t.Error("uploadBlob() returned nil blob when expecting success")
+			}
+
+			if !tc.wantErr && blob != nil {
+				if blob.Type != "blob" {
+					t.Errorf("Expected blob type 'blob', got '%s'", blob.Type)
+				}
+				if blob.MimeType != tc.mimeType {
+					t.Errorf("Expected mimeType %s, got %s", tc.mimeType, blob.MimeType)
+				}
+			}
+		})
+	}
+}
+

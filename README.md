@@ -24,6 +24,10 @@
 - `lang`: Optional - A comma-separated list of ISO 639 language codes for the post. Helps in categorizing the post by language.
 - `log-level`: Optional - Specifies the logging level (`debug`, `info`, `warn`, `error`). Defaults to `info`.
 - `enable-embeds`: Optional - Enable rich link card embeds for URLs in posts. When enabled, URLs will display as interactive link cards with title and description. Defaults to `true`.
+- `image-paths`: Optional - Comma-separated list of image file paths to attach to the post. Maximum 4 images, each up to 1MB. Supports JPEG, PNG, GIF, and WebP formats.
+- `image-alt-texts`: Optional - Comma-separated list of alt text descriptions for images. If only one value is provided, it will be used for all images. Improves accessibility.
+- `video-path`: Optional - Video file path to attach to the post. Maximum 50MB. Supports MP4, MOV, and WebM formats. Note: Video takes priority over images when both are provided.
+- `video-alt-text`: Optional - Alt text description for the video. Improves accessibility.
 
 ## Container Usage
 
@@ -96,6 +100,79 @@ Disable rich embeds (text-only URLs):
     password: ${{ secrets.BLUESKY_PASSWORD }}
     text: "Plain URL: https://github.com/cbrgm/bluesky-github-action"
     enable-embeds: false # Disable link cards, URLs will still be clickable
+```
+
+Post with single image:
+
+```yaml
+- name: Send post with image to Bluesky
+  id: bluesky_post_image
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }}
+    password: ${{ secrets.BLUESKY_PASSWORD }}
+    text: "Check out this screenshot!"
+    image-paths: "./screenshots/app.png"
+    image-alt-texts: "Screenshot of the application dashboard"
+```
+
+Post with multiple images:
+
+```yaml
+- name: Send post with multiple images to Bluesky
+  id: bluesky_post_images
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }}
+    password: ${{ secrets.BLUESKY_PASSWORD }}
+    text: "Release v1.0.0 is here! 🎉"
+    image-paths: "./screenshots/feature1.png,./screenshots/feature2.jpg,./screenshots/feature3.png"
+    image-alt-texts: "New dashboard feature,Improved settings panel,Dark mode support"
+```
+
+Post with images using the same alt text:
+
+```yaml
+- name: Send post with images (same alt text)
+  id: bluesky_post_images_same_alt
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }}
+    password: ${{ secrets.BLUESKY_PASSWORD }}
+    text: "Product gallery"
+    image-paths: "./images/product1.jpg,./images/product2.jpg,./images/product3.jpg"
+    image-alt-texts: "Product image" # Same alt text will be used for all images
+```
+
+Post with video:
+
+```yaml
+- name: Send post with video to Bluesky
+  id: bluesky_post_video
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }}
+    password: ${{ secrets.BLUESKY_PASSWORD }}
+    text: "Check out our product demo! 🎬"
+    video-path: "./videos/demo.mp4"
+    video-alt-text: "Product demonstration video"
+```
+
+Post with video (release announcement):
+
+```yaml
+- name: Send release video to Bluesky
+  id: bluesky_release_video
+  uses: cbrgm/bluesky-github-action@v1
+  with:
+    handle: ${{ secrets.BLUESKY_HANDLE }}
+    password: ${{ secrets.BLUESKY_PASSWORD }}
+    text: |
+      🚀 Version 2.0 is live!
+
+      Watch our feature showcase video
+    video-path: "./release-assets/v2-showcase.mp4"
+    video-alt-text: "Version 2.0 feature showcase"
 ```
 
 ## High-Level Functionality

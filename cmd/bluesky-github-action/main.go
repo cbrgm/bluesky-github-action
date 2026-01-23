@@ -36,18 +36,22 @@ type Post struct {
 	CreatedAt string          `json:"createdAt"`        // ISO 8601 timestamp of post creation.
 	Langs     []string        `json:"langs,omitempty"`  // Optional languages the post supports.
 	Facets    []RichTextFacet `json:"facets,omitempty"` // Rich text facets for links, mentions, hashtags.
-	Embed     *EmbedExternal  `json:"embed,omitempty"`  // External link embed for link cards.
+	Embed     interface{}     `json:"embed,omitempty"`  // Embed can be EmbedExternal or EmbedImages.
 }
 
 // ActionInputs aggregates command line arguments and environment variables for application configuration.
 type ActionInputs struct {
-	PDSURL       string   `arg:"--pds-url" env:"ATP_PDS_HOST" default:"https://bsky.social"` // Base URL of the PDS service.
-	Handle       string   `arg:"--handle,required" env:"ATP_AUTH_HANDLE"`                    // User handle for authentication.
-	Password     string   `arg:"--password,required" env:"ATP_AUTH_PASSWORD"`                // Password for authentication.
-	Text         string   `arg:"--text,required" env:"BSKY_MESSAGE"`                         // Text content for the new post.
-	Lang         []string `arg:"--lang" env:"BSKY_LANG"`                                     // Languages for the new post.
-	LogLevel     string   `arg:"--log-level" env:"LOG_LEVEL" default:"info"`                 // Logging level.
-	EnableEmbeds bool     `arg:"--enable-embeds" env:"BSKY_ENABLE_EMBEDS" default:"true"`    // Enable link card embeds.
+	PDSURL        string   `arg:"--pds-url" env:"ATP_PDS_HOST" default:"https://bsky.social"` // Base URL of the PDS service.
+	Handle        string   `arg:"--handle,required" env:"ATP_AUTH_HANDLE"`                    // User handle for authentication.
+	Password      string   `arg:"--password,required" env:"ATP_AUTH_PASSWORD"`                // Password for authentication.
+	Text          string   `arg:"--text,required" env:"BSKY_MESSAGE"`                         // Text content for the new post.
+	Lang          []string `arg:"--lang" env:"BSKY_LANG"`                                     // Languages for the new post.
+	LogLevel      string   `arg:"--log-level" env:"LOG_LEVEL" default:"info"`                 // Logging level.
+	EnableEmbeds  bool     `arg:"--enable-embeds" env:"BSKY_ENABLE_EMBEDS" default:"true"`    // Enable link card embeds.
+	ImagePaths    string   `arg:"--image-paths" env:"BSKY_IMAGE_PATHS"`                       // Comma-separated image file paths.
+	ImageAltTexts string   `arg:"--image-alt-texts" env:"BSKY_IMAGE_ALT_TEXTS"`               // Comma-separated alt texts for images.
+	VideoPath     string   `arg:"--video-path" env:"BSKY_VIDEO_PATH"`                         // Video file path.
+	VideoAltText  string   `arg:"--video-alt-text" env:"BSKY_VIDEO_ALT_TEXT"`                 // Alt text for video.
 }
 
 // createSession initiates a new session with the PDS service.
@@ -119,6 +123,46 @@ func publishPost(pdsURL string, session *SessionResponse, post *Post, logger *sl
 	return nil
 }
 
+// uploadBlob uploads a blob (image or small file) to the PDS service.
+// nolint: errcheck
+func uploadBlob(pdsURL, accessToken string, data []byte, mimeType string, logger *slog.Logger) (*Blob, error) {
+	uploadURL := fmt.Sprintf("%s/xrpc/com.atproto.repo.uploadBlob", pdsURL)
+
+	request, err := http.NewRequest("POST", uploadURL, bytes.NewBuffer(data))
+	if err != nil {
+		logger.Error("Error creating blob upload request", "err", err)
+		return nil, err
+	}
+
+	request.Header.Set("Content-Type", mimeType)
+	request.Header.Set("Authorization", "Bearer "+accessToken)
+
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		logger.Error("Error uploading blob", "err", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		logger.Error("Failed to upload blob", "statusCode", resp.StatusCode, "body", string(body))
+		return nil, fmt.Errorf("failed to upload blob, status code: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var blobResp struct {
+		Blob Blob `json:"blob"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&blobResp); err != nil {
+		logger.Error("Error decoding blob response", "err", err)
+		return nil, err
+	}
+
+	return &blobResp.Blob, nil
+}
+
 // stringToLogLevel converts a string representation of a log level to its slog.Level counterpart.
 func stringToLogLevel(level string) slog.Level {
 	switch level {
@@ -162,9 +206,31 @@ func main() {
 	// Parse rich text facets from the text
 	facets := parseRichTextFacets(args.Text)
 
-	// Create embed for the first URL if embeds are enabled
-	var embed *EmbedExternal
-	if args.EnableEmbeds && len(facets) > 0 {
+	// Determine which embed to use (priority: video > images > link cards)
+	var embed interface{}
+
+	// Process video if provided (takes priority)
+	if args.VideoPath != "" {
+		logger.Info("Processing video for upload")
+		videoEmbed, err := processVideos(args.PDSURL, session.AccessToken, session.UserID, args.VideoPath, args.VideoAltText, logger)
+		if err != nil {
+			logger.Error("Error processing video", "err", err)
+			os.Exit(1)
+		}
+		embed = videoEmbed
+		logger.Info("Video processed successfully")
+	} else if args.ImagePaths != "" {
+		// Process images if no video provided
+		logger.Info("Processing images for upload")
+		imageEmbed, err := processImages(args.PDSURL, session.AccessToken, args.ImagePaths, args.ImageAltTexts, logger)
+		if err != nil {
+			logger.Error("Error processing images", "err", err)
+			os.Exit(1)
+		}
+		embed = imageEmbed
+		logger.Info("Images processed successfully", "count", len(imageEmbed.Images))
+	} else if args.EnableEmbeds && len(facets) > 0 {
+		// Create embed for the first URL if embeds are enabled and no media provided
 		firstURL := facets[0].Features[0].URI
 		logger.Debug("Fetching embed metadata", "url", firstURL)
 		embed = fetchLinkMetadata(firstURL, logger)
