@@ -10,37 +10,6 @@ import (
 	"time"
 )
 
-// RichTextFacet represents a rich text formatting facet.
-type RichTextFacet struct {
-	Index    RichTextIndex     `json:"index"`
-	Features []RichTextFeature `json:"features"`
-}
-
-// RichTextIndex represents the byte range for a rich text facet.
-type RichTextIndex struct {
-	ByteStart int `json:"byteStart"`
-	ByteEnd   int `json:"byteEnd"`
-}
-
-// RichTextFeature represents a rich text feature (link, mention, hashtag).
-type RichTextFeature struct {
-	Type string `json:"$type"`
-	URI  string `json:"uri,omitempty"`
-}
-
-// EmbedExternal represents an external link embed.
-type EmbedExternal struct {
-	Type     string               `json:"$type"`
-	External EmbedExternalContent `json:"external"`
-}
-
-// EmbedExternalContent represents the content of an external embed.
-type EmbedExternalContent struct {
-	URI         string `json:"uri"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-}
-
 // parseRichTextFacets extracts URLs from text and creates rich text facets.
 func parseRichTextFacets(text string) []RichTextFacet {
 	var facets []RichTextFacet
