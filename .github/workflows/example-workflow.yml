@@ -9,7 +9,7 @@ jobs:
     steps:
     - name: Send post to Bluesky
       id: bluesky_post
-      uses: cbrgm/bluesky-github-action@fb4054952b200e929e197f633a088195def14cbc # v1.2.1
+      uses: cbrgm/bluesky-github-action@76d2732d6164162c05daec1d115acd7400133067 # v1.2.2
       with:
         handle: ${{ secrets.BLUESKY_HANDLE }}
         password: ${{ secrets.BLUESKY_PASSWORD }}
